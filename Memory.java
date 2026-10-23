@@ -1,6 +1,7 @@
 import java.util.LinkedHashMap;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.Objects;
 
 /**
  * Memory represents a computer's main memory
@@ -9,7 +10,7 @@ import java.util.ArrayList;
  *
  * @author Tristan Dyson
  * @date October 23rd 2026
- * @version 1.1
+ * @version 1.2
  * @since 1.0
  */
 public class Memory {
@@ -31,6 +32,20 @@ public class Memory {
             this.dirtyBit = false; // Just putting it into memory not written
             this.clockBit = true; // Bit should be raised initially
         }
+
+        // Effectively reconstruct the object to avoid issues with modifying vs reseating reference
+        void swap(int pageNumber) {
+            this.pageNumber = pageNumber;
+            this.dirtyBit = false; // Just putting it into memory not written
+            this.clockBit = true; // Bit should be raised initially
+        }
+
+        @Override 
+        public boolean equals(Object o) {
+            // Identity is based on page number
+            return pageNumber == ((Page) o).pageNumber;
+        }
+
     }
 
     // A process can have up to 50 entries max in memory
@@ -43,31 +58,56 @@ public class Memory {
 
     // Index into the hashmap using PID to get pages in memory for that process
     // containership in linked hash map checks for if that page exists in memory, and index into it to get metadata 
-    HashMap<Integer, ArrayList<Page>> inMemoryPages = new LinkedHashMap<>();
+    HashMap<Integer, ArrayList<Page>> inMemoryProcessPages = new LinkedHashMap<>();
 
-    int makeWrite(int PID, int pageNumber) {
+    // For the clock replacement policy 
+    HashMap<Integer, CyclicArrayListIterator<Page, ArrayList<Page>>> clockPageIterators = new HashMap<>(); 
+
+    int makeOperation(int PID, int pageNumber, Operation op) {
         int timeTaken = 0; // With each condition which can cause a delay add to this
 
-        inMemoryPages.putIfAbsent(PID, new ArrayList<>());
+        inMemoryProcessPages.putIfAbsent(PID, new ArrayList<>());
+        clockPageIterators.putIfAbsent(PID, new CyclicArrayListIterator<>(inMemoryProcessPages.get(PID)));
 
-        var pages = inMemoryPages.get(PID);
+        var inMemoryPages = inMemoryProcessPages.get(PID);
 
-        
-        if (!pages.containsKey(pageNumber)) {
+        if (!inMemoryPages.contains(pageNumber)) {
             // Page fault, we need to add this page into memory in order to do our op
+            timeTaken += PAGE_FAULT_TIME_TAKEN;
 
-            if (pages.size() < MAX_ENTRIES) {
+            if (inMemoryPages.size() < MAX_ENTRIES) {
                 // We can add an entry into memory to resolve this
-                pages.put(pageNumber, new Metadata());
+                inMemoryPages.add(new Page(pageNumber));
             }
             else {
                 // We need to replace an entry in memory to resolve this
                 // We are using a clock replacement policy
-                pages.
+                var iter = clockPageIterators.get(PID);
+                
+                while (true) {
+                    // The cyclic iterator provided never reaches an end so no need for .hasNext()
+
+                    var page = iter.next();
+                    if (page.clockBit) {
+                        // If set (1) unset (0), java does not let let 0/1 be implicitly convertible to bool...
+                        page.clockBit = false;
+                    }
+                    else {
+                        // Unset clockbit means this page can get replaced
+                        if (page.dirtyBit) timeTaken += DIRTY_WRITE_BACK_TIME_TAKEN;
+                        page.swap(pageNumber);
+                        break;
+                    }
+                }
             } 
         }
 
-        return 4;
+        if (op == Operation.WRITE) {
+            Page = inMemoryPages.get
+        }        
+
+        
+        return timeTaken;
     }
 
 

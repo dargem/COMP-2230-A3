@@ -13,12 +13,12 @@ import java.util.ArrayList;
  * @version 1.0
  * @since 1.0
  */
-public class CyclicArrayIterator<E, T extends ArrayList<E>> implements Iterator<E> {
+public class CyclicArrayListIterator<E, T extends ArrayList<E>> implements Iterator<E> {
     T list;
     int idx; // Our current index in the array
 
     // List is the provided container to iterate over
-    CyclicArrayIterator(T list) {
+    CyclicArrayListIterator(T list) {
         this.list = list;
         this.idx = -1; // This is to avoid a bug with iterator wraparound, see details in next()
     }
