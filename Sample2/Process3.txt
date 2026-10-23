@@ -1,0 +1,11 @@
+begin
+W 7
+R 8
+R 9
+W 8
+R 7
+R 8
+W 9
+R 8
+R 7
+end

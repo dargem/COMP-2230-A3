@@ -1,0 +1,6 @@
+Clock - Fixed-Local Replacement:
+Process Name      Turnaround Time  # Faults  # Write-Backs  Fault Times
+Process1          31               5         1              {0, 5, 10, 16, 22}
+Process2          61               8         2              {0, 6, 11, 17, 26, 36, 41, 46}
+Process3          29               3         1              {0, 7, 12}
+Process4          69               9         2              {0, 8, 13, 21, 27, 35, 40, 45, 60}

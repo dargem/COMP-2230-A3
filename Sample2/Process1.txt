@@ -1,0 +1,9 @@
+begin
+W 1
+R 3
+W 2
+R 1
+R 5
+W 4
+R 3
+end
