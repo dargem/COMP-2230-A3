@@ -1,7 +1,6 @@
 import java.util.LinkedHashMap;
 import java.util.HashMap;
 import java.util.ArrayList;
-import java.util.Objects;
 
 /**
  * Memory represents a computer's main memory
@@ -63,6 +62,8 @@ public class Memory {
     // For the clock replacement policy 
     HashMap<Integer, CyclicArrayListIterator<Page, ArrayList<Page>>> clockPageIterators = new HashMap<>(); 
 
+    // Make a memory operation on a given processes page number
+    // Returns time taken to make that operation (can be 0)
     int makeOperation(int PID, int pageNumber, Operation op) {
         int timeTaken = 0; // With each condition which can cause a delay add to this
 
@@ -103,12 +104,13 @@ public class Memory {
         }
 
         if (op == Operation.WRITE) {
-            Page = inMemoryPages.get
-        }        
+            Page p = inMemoryPages.stream()
+                .filter(page -> page.equals(pageNumber)) 
+                .findFirst().orElseThrow(); // We know it must be in memory (since we just added it...)
 
+            p.dirtyBit = true;
+        }        
         
         return timeTaken;
     }
-
-
 }
