@@ -64,8 +64,12 @@ public class Memory {
 
     // Make a memory operation on a given processes page number
     // Returns time taken to make that operation (can be 0)
-    int makeOperation(int PID, int pageNumber, Operation op) {
+    OperationStatus makeOperation(int PID, Instruction instruction) {
         int timeTaken = 0; // With each condition which can cause a delay add to this
+        boolean didPageFault = false;
+        boolean didWriteBack = false;
+        var pageNumber = instruction.pageNumber();
+        var op = instruction.op();
 
         inMemoryProcessPages.putIfAbsent(PID, new ArrayList<>());
         clockPageIterators.putIfAbsent(PID, new CyclicArrayListIterator<>(inMemoryProcessPages.get(PID)));
@@ -75,6 +79,7 @@ public class Memory {
         if (!inMemoryPages.contains(pageNumber)) {
             // Page fault, we need to add this page into memory in order to do our op
             timeTaken += PAGE_FAULT_TIME_TAKEN;
+            didPageFault = true;
 
             if (inMemoryPages.size() < MAX_ENTRIES) {
                 // We can add an entry into memory to resolve this
@@ -97,6 +102,7 @@ public class Memory {
                         // Unset clockbit means this page can get replaced
                         if (page.dirtyBit) timeTaken += DIRTY_WRITE_BACK_TIME_TAKEN;
                         page.swap(pageNumber);
+                        didWriteBack = true;
                         break;
                     }
                 }
@@ -109,8 +115,8 @@ public class Memory {
                 .findFirst().orElseThrow(); // We know it must be in memory (since we just added it...)
 
             p.dirtyBit = true;
-        }        
+        }
         
-        return timeTaken;
+        return new OperationStatus(timeTaken, didPageFault, didWriteBack);
     }
 }

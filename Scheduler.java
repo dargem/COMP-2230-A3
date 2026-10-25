@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 
 /**
  * A round robin scheduler for processes
@@ -10,9 +11,11 @@
  */
 public class Scheduler {
     private final Memory memory;
+    private final ArrayList<Process> processes;
 
-    Scheduler(Memory memory, ) {
+    Scheduler(Memory memory, ArrayList<Process> processes) {
         this.memory = memory;
+        this.processes = processes;
     }
 
     
