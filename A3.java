@@ -68,7 +68,7 @@ public class A3 {
                 switch (cur) {
                     case 'W', 'R', 'e' -> {
                         // We have finalized our current request (e included for trailing end)
-                        if (rollingOperation != null) {
+                        if (rollingOperation != null && rollingPageNumberAsString != "") {
                             // Save the instruction
                             instructions.add(new Instruction(rollingOperation, Integer.parseInt(rollingPageNumberAsString)));
                         }
@@ -76,6 +76,8 @@ public class A3 {
                         // Load new start in
                         if (cur == 'W') rollingOperation = Operation.WRITE;
                         else if (cur == 'R') rollingOperation = Operation.READ;
+
+                        rollingPageNumberAsString = "";
                     }
                     default -> {
                         if (Character.isDigit(cur)) {

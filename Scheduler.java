@@ -29,16 +29,24 @@ public class Scheduler {
         Process runningProcess = null; // The currently running process, null if there isn'ts
         int quantumRemaining = timeQuantum; // The current running process' time quantum remaining
 
-        while (!readyProcesses.isEmpty() && !blockedProcesses.isEmpty()) {
+        while (!readyProcesses.isEmpty() || !blockedProcesses.isEmpty() || runningProcess != null) {
 
-            while (blockedProcesses.peek().getUnblockTime() <= time) {
+            while (blockedProcesses.size() > 0 && blockedProcesses.peek().getUnblockTime() <= time) {
                 // Add any blocked processes that have finished their wait to the ready queue
                 readyProcesses.add(blockedProcesses.remove());
             }
 
+            if (runningProcess != null && !runningProcess.hasNextInstruction()) {
+                // Running process has completed its instructions
+                runningProcess = null;
+                quantumRemaining = timeQuantum;
+            }
+
             if (runningProcess != null && quantumRemaining == 0) {
-                // Running process has finished
+                // Running process has finished its time quantum
                 readyProcesses.add(runningProcess);
+                runningProcess = null;
+                quantumRemaining = timeQuantum;
             }
 
             if (runningProcess == null) {
@@ -64,6 +72,7 @@ public class Scheduler {
 
                 if (runningProcess == null) {
                     // We still haven't been able to select anything
+                    time++;
                     continue;
                 }
             }
@@ -75,6 +84,7 @@ public class Scheduler {
                 // So we need to place into the blocked queue until time taken elapses
                 runningProcess.addBlock(block);
                 blockedProcesses.add(runningProcess);
+                runningProcess = null;
             }
 
             // We only consider requeuing at the start 

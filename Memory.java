@@ -38,13 +38,6 @@ public class Memory {
             this.dirtyBit = false; // Just putting it into memory not written
             this.clockBit = true; // Bit should be raised initially
         }
-
-        @Override 
-        public boolean equals(Object o) {
-            // Identity is based on page number
-            return pageNumber == ((Page) o).pageNumber;
-        }
-
     }
 
     // A process can have up to 50 entries max in memory
@@ -80,7 +73,8 @@ public class Memory {
 
         var inMemoryPages = inMemoryProcessPages.get(PID);
 
-        if (!inMemoryPages.contains(pageNumber)) {
+
+        if (inMemoryPages.stream().noneMatch(page -> page.pageNumber == pageNumber)) {
             // Page fault, we need to add this page into memory in order to do our op
             timeTaken += PAGE_FAULT_TIME_TAKEN;
             didPageFault = true;
@@ -114,7 +108,7 @@ public class Memory {
 
         if (op == Operation.WRITE) {
             Page p = inMemoryPages.stream()
-                .filter(page -> page.equals(pageNumber)) 
+                .filter(page -> page.pageNumber == pageNumber) 
                 .findFirst().orElseThrow(); // We know it must be in memory (since we just added it...)
 
             p.dirtyBit = true;
