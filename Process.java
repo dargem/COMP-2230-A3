@@ -33,20 +33,35 @@ public class Process {
         return instructions.get(instructionIndex++);
     }
 
+    // Peek at the next instruction to execute (check is safe using has next instruction)
+    Instruction peekNextInstruction() {
+        return instructions.get(instructionIndex);
+    }
+
     // Set the time this process has finished its operations
     void setEndTime(int time) {
         this.endTime = time;
     }
 
+    // Get the time this process finishes
     int getEndTime() {
         return endTime;
     }
 
     // Returns the end of the last time this process was blocked
     // Throws an error if it has never been blocked
-    Integer getUnblockTime() {
+    int getUnblockTime() {
         return blocks.getLast().blockEnd();
     }
+
+    // Returns the sequence number of the last block
+    // if block A has a < sequence number than block B
+    // this guarantees block A issued that block before block B did
+    int getBlockSequence() {
+        return blocks.getLast().sequenceNumber();
+    }
+
+
 
     int getPID() {
         return PID;

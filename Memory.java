@@ -45,6 +45,8 @@ public class Memory {
     final static int PAGE_FAULT_TIME_TAKEN = 4;
     final static int DIRTY_WRITE_BACK_TIME_TAKEN = 1;
 
+    static int blockSequenceNumber = 0; // increasing sequence number, incremented each time a block produced
+
     Memory(int maxEntries) {
         this.maxEntries = maxEntries;
     }
@@ -80,42 +82,41 @@ public class Memory {
             didPageFault = true;
 
             if (inMemoryPages.size() < maxEntries) {
-                // We can add an entry into memory to resolve this
                 inMemoryPages.add(new Page(pageNumber));
             }
             else {
-                // We need to replace an entry in memory to resolve this
-                // We are using a clock replacement policy
                 var iter = clockPageIterators.get(PID);
-                
+
                 while (true) {
-                    // The cyclic iterator provided never reaches an end so no need for .hasNext()
                     var page = iter.next();
                     if (page.clockBit) {
                         // If set (1) unset (0), java does not let let 0/1 be implicitly convertible to bool...
                         page.clockBit = false;
                     }
                     else {
-                        // Unset clockbit means this page can get replaced
-                        if (page.dirtyBit) timeTaken += DIRTY_WRITE_BACK_TIME_TAKEN;
+                        if (page.dirtyBit) {
+                            timeTaken += DIRTY_WRITE_BACK_TIME_TAKEN;
+                            didWriteBack = true;
+                        }
                         page.swap(pageNumber);
-                        didWriteBack = true;
                         break;
                     }
                 }
-            } 
+            }
         }
 
+        Page p = inMemoryPages.stream()
+            .filter(page -> page.pageNumber == pageNumber) 
+            .findFirst().orElseThrow(); // We know it must be in memory (since we just added it...)
+        
         if (op == Operation.WRITE) {
-            Page p = inMemoryPages.stream()
-                .filter(page -> page.pageNumber == pageNumber) 
-                .findFirst().orElseThrow(); // We know it must be in memory (since we just added it...)
-
             p.dirtyBit = true;
         }
+
+        p.clockBit = true;
         
         return (didPageFault || didWriteBack) 
-            ? new Block(time, time + timeTaken, didPageFault, didWriteBack) 
+            ? new Block(time, time + timeTaken, didPageFault, didWriteBack, blockSequenceNumber++) 
             : null; 
     }
 
@@ -132,7 +133,7 @@ public class Memory {
         }
         inMemoryProcessPages.put(PID, new ArrayList<>()); // Wipes it
         return hasDirtyPage 
-            ? new Block(time, time + DIRTY_WRITE_BACK_TIME_TAKEN, false, hasDirtyPage)
+            ? new Block(time, time + DIRTY_WRITE_BACK_TIME_TAKEN, false, hasDirtyPage, blockSequenceNumber++)
             : null;
     }
 }

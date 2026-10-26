@@ -15,7 +15,7 @@ import java.util.Comparator;
 public class Scheduler {
     private final Memory memory;
     private final ArrayDeque<Process> readyProcesses = new ArrayDeque<>();
-    private final PriorityQueue<Process> blockedProcesses = new PriorityQueue<>(Comparator.comparingInt(Process::getUnblockTime));
+    private final PriorityQueue<Process> blockedProcesses = new PriorityQueue<>(Comparator.comparingInt(Process::getUnblockTime).thenComparingInt(Process::getBlockSequence));
     private final int timeQuantum;
 
     Scheduler(Memory memory, ArrayList<Process> processes, int timeQuantum) {
@@ -38,6 +38,15 @@ public class Scheduler {
 
             if (runningProcess != null && !runningProcess.hasNextInstruction()) {
                 // Running process has completed its instructions
+                var block = memory.releaseMemory(runningProcess.getPID(), time);
+                if (block != null) {
+                    runningProcess.addBlock(block);
+                    runningProcess.setEndTime(block.blockEnd());
+                }
+                else {
+                    runningProcess.setEndTime(time);
+                }
+
                 runningProcess = null;
                 quantumRemaining = timeQuantum;
             }
@@ -56,6 +65,7 @@ public class Scheduler {
                     var process = readyProcesses.remove();
                     if (process.hasNextInstruction()) {
                         runningProcess = process;
+                        quantumRemaining = timeQuantum;
                         break;
                     }
 
@@ -72,13 +82,14 @@ public class Scheduler {
 
                 if (runningProcess == null) {
                     // We still haven't been able to select anything
+                    
                     time++;
                     continue;
                 }
             }
 
             // We have a process to run here which hasn't finished yet
-            var block = memory.makeOperation(runningProcess.getPID(), runningProcess.nextInstruction(), time);
+            var block = memory.makeOperation(runningProcess.getPID(), runningProcess.peekNextInstruction(), time);
             if (block != null) {
                 // This means we have a delay (ie page fault)
                 // So we need to place into the blocked queue until time taken elapses
@@ -86,10 +97,12 @@ public class Scheduler {
                 blockedProcesses.add(runningProcess);
                 runningProcess = null;
             }
-
-            // We only consider requeuing at the start 
-            time++;
-            quantumRemaining--;
+            else {
+                // We only consider requeuing at the start, execute the instruction
+                runningProcess.nextInstruction();
+                time++;
+                quantumRemaining--;
+            }
         }
     }
 

@@ -17,13 +17,12 @@ import java.nio.file.Path;
 public class A3 {
     public static void main(String args[]) {
         var processes = new ArrayList<Process>();
-
-        var numberFramesPerProcess = Integer.parseInt(args[0]);
-        var timeQuantum = Integer.parseInt(args[1]);
-
         for (int i = 2; i < args.length; ++i) {
             processes.add(parseFile(args[i], i + 1));
         }
+
+        var numberFramesPerProcess = Integer.parseInt(args[0]) / processes.size(); // total frames / frames per process, java floors it
+        var timeQuantum = Integer.parseInt(args[1]);
 
         var memory = new Memory(numberFramesPerProcess);
         var scheduler = new Scheduler(memory, processes, timeQuantum);
@@ -31,19 +30,28 @@ public class A3 {
         scheduler.run();
 
         System.out.println("Clock - Fixed-Local Replacement:");
-        System.out.printf(
-            "%-12s %12s %4s %13s %s%n",
-            "Process Name", "Turnaround Time", "# Faults", "# Write-Backs", "Fault Times"
-        );
+        String header = "%-22s %15s %8s %13s  %s%n";
+        String row    = "%-22s %15d %8d %13d  %s%n";
+
+        System.out.printf(header, "Process Name", "Turnaround Time", "# Faults", "# Write-Backs", "Fault Times");
 
         for (var process : processes) {
+            var blocks = process.getBlocks();
+            String processName = java.nio.file.Path.of(process.getName()).getFileName().toString();
+            processName = processName.replaceFirst("\\.[^.]+$", "");
+
+            String faultTimes = blocks.stream()
+                .filter(o -> o.didPageFault())
+                .map(o -> String.valueOf(o.blockStart()))
+                .collect(java.util.stream.Collectors.joining(", ", "{", "}"));
+
             System.out.printf(
-                "%-12s %12d %8d %14d %s%n",
-                process.getName(),
+                row,
+                processName,
                 process.getEndTime(),
-                process.getBlocks().size(),
-                process.getBlocks().stream().filter(o -> o.didWriteBack()).count(),
-                process.getBlocks().stream().map(o -> o.blockStart()).toArray()
+                blocks.stream().filter(o -> o.didPageFault()).count(),
+                blocks.stream().filter(o -> o.didWriteBack()).count(),
+                faultTimes
             );
         }
     }

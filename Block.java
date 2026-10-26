@@ -6,4 +6,4 @@
  * @version 1.1
  * @since 1.0
  */
-public record Block (int blockStart, int blockEnd, boolean didPageFault, boolean didWriteBack) {}
+public record Block (int blockStart, int blockEnd, boolean didPageFault, boolean didWriteBack, int sequenceNumber) {}
