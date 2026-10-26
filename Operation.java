@@ -1,3 +1,5 @@
+import java.util.InputMismatchException;
+
 /**
  * Represents an operation on memory, can be a read or write
  *
@@ -9,5 +11,15 @@
 
 public enum Operation {
     WRITE,
-    READ
+    READ;
+
+    public static Operation fromString(String s) {
+        return switch(s) {
+            case "W" -> Operation.WRITE;
+            case "R" -> Operation.READ;
+            default -> {
+                throw new InputMismatchException("String not recognised for operation conversion");
+            }
+        };
+    }
 }

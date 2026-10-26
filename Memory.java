@@ -48,9 +48,13 @@ public class Memory {
     }
 
     // A process can have up to 50 entries max in memory
-    final static int MAX_ENTRIES = 50;
+    final int maxEntries;
     final static int PAGE_FAULT_TIME_TAKEN = 4;
     final static int DIRTY_WRITE_BACK_TIME_TAKEN = 1;
+
+    Memory(int maxEntries) {
+        this.maxEntries = maxEntries;
+    }
 
     // Linked hashmap of pagetable entries in main memory, Integer is page no, value is the metadata associated with a page
     // Must be smaller in size than MAX_ENTRIES, the iterator produced by a linked hash map maintains insertion order
@@ -81,7 +85,7 @@ public class Memory {
             timeTaken += PAGE_FAULT_TIME_TAKEN;
             didPageFault = true;
 
-            if (inMemoryPages.size() < MAX_ENTRIES) {
+            if (inMemoryPages.size() < maxEntries) {
                 // We can add an entry into memory to resolve this
                 inMemoryPages.add(new Page(pageNumber));
             }
@@ -118,5 +122,21 @@ public class Memory {
         }
         
         return new OperationStatus(timeTaken, didPageFault, didWriteBack);
+    }
+
+    // Release all the memory associated with a PID
+    // Returns an OperationStatus as it can need writebacks
+    OperationStatus releaseMemory(int PID) {
+        boolean hasDirtyPage = false;
+        var mem = inMemoryProcessPages.get(PID);
+        for (var p : mem) {
+            if (!p.dirtyBit) continue;
+
+            hasDirtyPage = true;
+            break;
+        }
+
+        inMemoryProcessPages.put(PID, new ArrayList<>()); // Wipes it
+        return new OperationStatus(hasDirtyPage ? DIRTY_WRITE_BACK_TIME_TAKEN : 0, false, hasDirtyPage);
     }
 }

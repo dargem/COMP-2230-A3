@@ -16,18 +16,18 @@ public class Scheduler {
     private final Memory memory;
     private final ArrayDeque<Process> readyProcesses = new ArrayDeque<>();
     private final PriorityQueue<Process> blockedProcesses = new PriorityQueue<>(Comparator.comparingInt(Process::getUnblockTime));
-    private final int TIME_QUANTUM;
+    private final int timeQuantum;
 
-    Scheduler(Memory memory, ArrayList<Process> processes, int time_quantum) {
+    Scheduler(Memory memory, ArrayList<Process> processes, int timeQuantum) {
         this.memory = memory;
         for (var p : processes) readyProcesses.add(p);
-        this.TIME_QUANTUM = time_quantum;
+        this.timeQuantum = timeQuantum;
     }
 
     void run() {
         int time = 0;
         Process runningProcess = null; // The currently running process, null if there isn'ts
-        int quantumRemaining = TIME_QUANTUM; // The current running process' time quantum remaining
+        int quantumRemaining = timeQuantum; // The current running process' time quantum remaining
 
         while (!readyProcesses.isEmpty() && !blockedProcesses.isEmpty()) {
 
@@ -50,6 +50,12 @@ public class Scheduler {
                         runningProcess = process;
                         break;
                     }
+
+                    // We have a ready process that finished its last instruction
+                    var stat = memory.releaseMemory(process.getPID());
+                    process.addOperationStatus(stat);
+
+                    process.setEndTime(time + stat.timeTaken());
                 }
 
                 if (runningProcess == null) {
@@ -69,7 +75,6 @@ public class Scheduler {
                 blockedProcesses.add(runningProcess);
             } 
             // We only consider requeuing at the start 
-
             time++;
             quantumRemaining--;
         }
