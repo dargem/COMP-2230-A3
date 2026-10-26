@@ -52,10 +52,14 @@ public class Scheduler {
                     }
 
                     // We have a ready process that finished its last instruction
-                    var stat = memory.releaseMemory(process.getPID());
-                    process.addOperationStatus(stat);
+                    var block = memory.releaseMemory(process.getPID(), time);
+                    if (block != null) {
+                        process.addBlock(block);
+                        process.setEndTime(block.blockEnd());
+                        continue;
+                    }
 
-                    process.setEndTime(time + stat.timeTaken());
+                    process.setEndTime(time);
                 }
 
                 if (runningProcess == null) {
@@ -65,15 +69,14 @@ public class Scheduler {
             }
 
             // We have a process to run here which hasn't finished yet
-            var stat = memory.makeOperation(runningProcess.getPID(), runningProcess.nextInstruction());
-            runningProcess.addOperationStatus(stat);
-
-            if (stat.timeTaken() > 0) {
+            var block = memory.makeOperation(runningProcess.getPID(), runningProcess.nextInstruction(), time);
+            if (block != null) {
                 // This means we have a delay (ie page fault)
                 // So we need to place into the blocked queue until time taken elapses
-                runningProcess.setUnblockTime(time + stat.timeTaken());
+                runningProcess.addBlock(block);
                 blockedProcesses.add(runningProcess);
-            } 
+            }
+
             // We only consider requeuing at the start 
             time++;
             quantumRemaining--;

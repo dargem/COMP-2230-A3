@@ -29,6 +29,23 @@ public class A3 {
         var scheduler = new Scheduler(memory, processes, timeQuantum);
 
         scheduler.run();
+
+        System.out.println("Clock - Fixed-Local Replacement:");
+        System.out.printf(
+            "%-12s %12s %4s %13s %s%n",
+            "Process Name", "Turnaround Time", "# Faults", "# Write-Backs", "Fault Times"
+        );
+
+        for (var process : processes) {
+            System.out.printf(
+                "%-12s %12d %8d %14d %s%n",
+                process.getName(),
+                process.getEndTime(),
+                process.getBlocks().size(),
+                process.getBlocks().stream().filter(o -> o.didWriteBack()).count(),
+                process.getBlocks().stream().map(o -> o.blockStart()).toArray()
+            );
+        }
     }
 
     // Parses a given filename, making a process using it
@@ -47,14 +64,14 @@ public class A3 {
                 // Essentially we roll from our start idx -> end idx 
                 // We take note of when a new page request starts and finalize our rolling request
 
-                var cur = content.charAt(endIdx);
+                var cur = content.charAt(currentIdx);
                 switch (cur) {
                     case 'W', 'R', 'e' -> {
                         // We have finalized our current request (e included for trailing end)
-                        if (rollingOperation == null) continue; // Nothing to finalize
-
-                        // Save the instruction
-                        instructions.add(new Instruction(rollingOperation, Integer.parseInt(rollingPageNumberAsString)));
+                        if (rollingOperation != null) {
+                            // Save the instruction
+                            instructions.add(new Instruction(rollingOperation, Integer.parseInt(rollingPageNumberAsString)));
+                        }
 
                         // Load new start in
                         if (cur == 'W') rollingOperation = Operation.WRITE;
@@ -80,6 +97,6 @@ public class A3 {
             System.out.println("File read exception, check the path is valid");
         }
 
-        return new Process(instructions, PID);
+        return new Process(instructions, PID, name);
     }
 }

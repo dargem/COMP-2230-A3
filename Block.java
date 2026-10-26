@@ -3,7 +3,7 @@
  *
  * @author Tristan Dyson
  * @date October 23rd 2026
- * @version 1.0
+ * @version 1.1
  * @since 1.0
  */
-public record OperationStatus (int timeTaken, boolean didPageFault, boolean didWriteBack) {}
+public record Block (int blockStart, int blockEnd, boolean didPageFault, boolean didWriteBack) {}

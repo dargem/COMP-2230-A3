@@ -67,8 +67,8 @@ public class Memory {
     HashMap<Integer, CyclicArrayListIterator<Page, ArrayList<Page>>> clockPageIterators = new HashMap<>(); 
 
     // Make a memory operation on a given processes page number
-    // Returns time taken to make that operation (can be 0)
-    OperationStatus makeOperation(int PID, Instruction instruction) {
+    // Returns a Block for if the operation blocks (null if it doesn't)
+    Block makeOperation(int PID, Instruction instruction, int time) {
         int timeTaken = 0; // With each condition which can cause a delay add to this
         boolean didPageFault = false;
         boolean didWriteBack = false;
@@ -96,7 +96,6 @@ public class Memory {
                 
                 while (true) {
                     // The cyclic iterator provided never reaches an end so no need for .hasNext()
-
                     var page = iter.next();
                     if (page.clockBit) {
                         // If set (1) unset (0), java does not let let 0/1 be implicitly convertible to bool...
@@ -121,12 +120,14 @@ public class Memory {
             p.dirtyBit = true;
         }
         
-        return new OperationStatus(timeTaken, didPageFault, didWriteBack);
+        return (didPageFault || didWriteBack) 
+            ? new Block(time, time + timeTaken, didPageFault, didWriteBack) 
+            : null; 
     }
 
     // Release all the memory associated with a PID
-    // Returns an OperationStatus as it can need writebacks
-    OperationStatus releaseMemory(int PID) {
+    // Returns a Block if it blocked, if it didn't block this is null
+    Block releaseMemory(int PID, int time) {
         boolean hasDirtyPage = false;
         var mem = inMemoryProcessPages.get(PID);
         for (var p : mem) {
@@ -135,8 +136,9 @@ public class Memory {
             hasDirtyPage = true;
             break;
         }
-
         inMemoryProcessPages.put(PID, new ArrayList<>()); // Wipes it
-        return new OperationStatus(hasDirtyPage ? DIRTY_WRITE_BACK_TIME_TAKEN : 0, false, hasDirtyPage);
+        return hasDirtyPage 
+            ? new Block(time, time + DIRTY_WRITE_BACK_TIME_TAKEN, false, hasDirtyPage)
+            : null;
     }
 }

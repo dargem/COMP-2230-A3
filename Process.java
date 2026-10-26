@@ -11,15 +11,16 @@ import java.util.ArrayList;
 public class Process {
     private ArrayList<Instruction> instructions;
     private int instructionIndex = 0; // Essentially the instruction counter (what instruction runs next)
-    private Integer unblockTime = null; // Null if this processes isn't currently blocked 
-    private int endTime = -1;
+    private int endTime = 0;
     private final int PID;
+    private final String name;
 
-    ArrayList<OperationStatus> operationStatuses;
+    ArrayList<Block> blocks = new ArrayList<>(); // Blocks this process has experienced, none should be null
 
-    Process(ArrayList<Instruction> instructions, int PID) {
+    Process(ArrayList<Instruction> instructions, int PID, String name) {
         this.instructions = instructions;
         this.PID = PID;
+        this.name = name;
     }
 
     // Check there is a next instruction to execute (if false process finished)
@@ -41,22 +42,29 @@ public class Process {
         return endTime;
     }
 
+    // Returns the end of the last time this process was blocked
+    // Throws an error if it has never been blocked
     Integer getUnblockTime() {
-        return unblockTime;
-    }
-
-    void setUnblockTime(int unblockTime) {
-        this.unblockTime = unblockTime;
+        return blocks.getLast().blockEnd();
     }
 
     int getPID() {
         return PID;
     }
 
-    // Add the status of an operation to the process
-    void addOperationStatus(OperationStatus opStat) {
+    // Add a block to the process for record keeping
+    // A block should not be null
+    void addBlock(Block block) {
         // Needed to keep logs of when page faults etc
-        this.operationStatuses.add(opStat);
+        this.blocks.add(block);
+    }
+
+    String getName() {
+        return name;
+    }
+
+    ArrayList<Block> getBlocks() {
+        return blocks;
     }
 
 }
