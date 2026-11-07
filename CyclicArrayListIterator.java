@@ -14,8 +14,8 @@ import java.util.ArrayList;
  * @since 1.0
  */
 public class CyclicArrayListIterator<E, T extends ArrayList<E>> implements Iterator<E> {
-    T list;
-    int idx; // Our current index in the array
+    private T list;
+    private int idx; // Our current index in the array
 
     // List is the provided container to iterate over
     CyclicArrayListIterator(T list) {

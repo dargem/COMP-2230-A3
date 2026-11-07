@@ -15,7 +15,7 @@ public class Process {
     private final int PID;
     private final String name;
 
-    ArrayList<Block> blocks = new ArrayList<>(); // Blocks this process has experienced, none should be null
+    private ArrayList<Block> blocks = new ArrayList<>(); // Blocks this process has experienced, none should be null
 
     Process(ArrayList<Instruction> instructions, int PID, String name) {
         this.instructions = instructions;

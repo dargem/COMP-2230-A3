@@ -13,10 +13,11 @@ public enum Operation {
     WRITE,
     READ;
 
+    // Load the operation from string, case insensitive
     public static Operation fromString(String s) {
         return switch(s) {
-            case "W" -> Operation.WRITE;
-            case "R" -> Operation.READ;
+            case "W", "w" -> Operation.WRITE;
+            case "R", "r" -> Operation.READ;
             default -> {
                 throw new InputMismatchException("String not recognised for operation conversion");
             }
