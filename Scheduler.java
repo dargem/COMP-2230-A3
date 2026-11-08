@@ -9,12 +9,15 @@ import java.util.Comparator;
  *
  * @author Tristan Dyson
  * @date October 25th 2026
- * @version 1.1
+ * @version 1.2
  * @since 1.0
  */
 public class Scheduler {
     private final Memory memory;
     private final ArrayDeque<Process> readyProcesses = new ArrayDeque<>();
+
+    // A java priority queue does not have a "FIFO" ordering for elements with the same priority
+    // Due to this we need to add a tiebreaker which is an ordering for when they were inserted (this is blockSequence)
     private final PriorityQueue<Process> blockedProcesses = new PriorityQueue<>(Comparator.comparingInt(Process::getUnblockTime).thenComparingInt(Process::getBlockSequence));
     private final int timeQuantum;
 

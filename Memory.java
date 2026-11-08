@@ -14,7 +14,7 @@ import java.util.ArrayList;
  */
 public class Memory {
 
-    // A process can have up to 50 entries max in memory
+    // A process can have up to maxEntries entries in memory
     final int maxEntries;
     final static int PAGE_FAULT_TIME_TAKEN = 4;
     final static int DIRTY_WRITE_BACK_TIME_TAKEN = 1;
@@ -25,14 +25,12 @@ public class Memory {
         this.maxEntries = maxEntries;
     }
 
-    // Linked hashmap of pagetable entries in main memory, Integer is page no, value is the metadata associated with a page
-    // Must be smaller in size than MAX_ENTRIES, the iterator produced by a linked hash map maintains insertion order
-
     // Index into the hashmap using PID to get pages in memory for that process
-    // containership in linked hash map checks for if that page exists in memory, and index into it to get metadata 
+    // A Page contains metadata such as the clock bit and dirty bit 
     HashMap<Integer, ArrayList<Page>> inMemoryProcessPages = new LinkedHashMap<>();
 
-    // For the clock replacement policy 
+    // For the clock replacement policy, the cyclic iterator is just a utility tool
+    // next() if it reaches the end of the array list will simply cycle back to the start
     HashMap<Integer, CyclicArrayListIterator<Page, ArrayList<Page>>> clockPageIterators = new HashMap<>(); 
 
     // Make a memory operation on a given processes page number

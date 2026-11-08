@@ -74,6 +74,7 @@ public class A3 {
             }
         } catch (IOException e) {
             System.out.println(e);
+            System.exit(0); // If there's any exception file is not valid so quit
         }
 
         return new Process(instructions, PID, "Process" + PID);

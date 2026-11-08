@@ -1,6 +1,0 @@
-  Begin
-	R 4
-W	2
-r	1
-R 	5 
- R 3	END
